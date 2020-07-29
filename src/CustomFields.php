@@ -6,7 +6,7 @@ use JiraRestApi\Field\FieldService;
 use JiraRestApi\JiraException;
 use JiraRestApi\Configuration\ArrayConfiguration;
 
-class CustomFields extends Command
+class CustomFields
 {
 	private $variable_customfields_map=[
 				//'first_contact'=>'Date of First Response',
@@ -15,7 +15,7 @@ class CustomFields extends Command
 
     public function __construct()
     {
-        parent::__construct();
+       
     }
 	function __get($prop)
 	{
@@ -28,13 +28,7 @@ class CustomFields extends Command
         //
 		try 
 		{
-			$fieldService = new FieldService(
-			 new ArrayConfiguration([
-			 'jiraHost' => env('JIRA_EPS_URL'),
-               // for basic authorization:
-             'jiraUser' => env('JIRA_EPS_USERNAME'),
-             'jiraPassword' => env('JIRA_EPS_PASSWORD'),
-			]));
+			$fieldService = new FieldService();
 			
 			// return custom field only. 
 			$ret = $fieldService->getAllFields(Field::CUSTOM);
