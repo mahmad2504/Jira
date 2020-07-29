@@ -1,5 +1,5 @@
 {
-    "name": "mahmad2504/Jira",
+    "name": "mahmad/Jira",
     "type": "library",
     "description": "Jira access",
     "keywords": ["jira","api"],
@@ -16,5 +16,11 @@
     "require": {
         "php": ">=6.0.0",
 		"lesstif/php-jira-rest-client": "dev-master"
+    },
+	"minimum-stability": "dev",
+	"autoload": {
+        "psr-4": {
+            "ourcodeworld\\HelloComposer\\": "src/"
+        }
     }
 }
