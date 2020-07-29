@@ -24,8 +24,6 @@ class CustomFields
    
     public function Fetch()
     {
-		
-        //
 		try 
 		{
 			$fieldService = new FieldService();
