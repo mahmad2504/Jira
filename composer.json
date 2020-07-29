@@ -3,7 +3,7 @@
     "type": "library",
     "description": "Jira access",
     "keywords": ["jira","api"],
-    "homepage": "https://github.com/mahmad2504/Jir",
+    "homepage": "https://github.com/mahmad2504/Jira",
     "license": "MIT",
     "authors": [
         {
@@ -15,6 +15,6 @@
     ],
     "require": {
         "php": ">=6.0.0",
-		"lesstif/php-jira-rest-client": "dev-master",
+		"lesstif/php-jira-rest-client": "dev-master"
     }
 }
