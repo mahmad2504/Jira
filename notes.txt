@@ -1,0 +1,3 @@
+git remote -v
+git remote  add origin "https://mahmad2504@github.com/mahmad2504/Jira.git"
+git push --set-upstream origin master
