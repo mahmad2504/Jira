@@ -1,0 +1,20 @@
+{
+    "name": "mahmad2504/Jira",
+    "type": "library",
+    "description": "Jira access",
+    "keywords": ["jira","api"],
+    "homepage": "https://github.com/mahmad2504/Jir",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mumtaz Ahmad",
+            "email": "mumtazahmad2505@gmail.com",
+            "homepage": "",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=6.0.0",
+		"lesstif/php-jira-rest-client": "dev-master",
+    }
+}
