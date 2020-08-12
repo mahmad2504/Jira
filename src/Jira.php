@@ -207,6 +207,7 @@ class Jira
 				else
 				{
 					$seconds = $wlg->seconds;
+					//this  is test
 					if($timespent != $seconds)
 					{
 						dump($key."  updating worklog");
