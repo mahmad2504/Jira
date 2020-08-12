@@ -5,77 +5,23 @@ namespace mahmad\Jira;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use mahmad\Jira\JiraFields;
+use mahmad\Jira\Fields;
 use Carbon\Carbon;
 class Ticket
 {
-    function __construct($issue) 
+    function __construct($issue,Fields $fields) 
 	{
-		$jf = new JiraFields();
-		foreach($jf->Standard() as $field)
+		foreach($fields as $field=>$code)
 		{
-			$this->$field = $this->GetValue($field,$issue);
-			if($this->$field == null)
-				$this->$field = '';
+			if($field == 'issuelinks')
+			{
+				$this->outwardIssue = $this->GetValue('outwardIssue',$issue,'outwardIssue');
+				$this->inwardIssue = $this->GetValue('inwardIssue',$issue,'inwardIssue');
+			}
 			else
-			{
-				if($this->$field instanceof \DateTime) 
-				{
-					$this->SetTimeZone($this->$field);
-					$carbon = Carbon::instance($this->$field);
-					$carbon->second = 0;
-					$this->$field = $carbon->getTimestamp();//$this->$field->format('Y-m-d H:i');
-				}
-				else if($this->$field==-1)
-				{
-					
-				}
-				else if(is_array($this->$field))
-				{
-				}
-				else if(strtotime($this->$field)!=false)
-				{
-					
-					$dt = new \DateTime($this->$field);
-					$this->SetTimeZone($dt);
-					$carbon = Carbon::instance($dt);
-					$carbon->second = 0;
-					$this->$field = $carbon->getTimestamp();//$dt->format('Y-m-d H:i');
-				}
-				else if(is_object($this->$field))
-				{
-					dd($field." is object . Correct it ".__FILE__." line=".__LINE__);
-				}
-			}
-		}
-		foreach($jf->Custom() as $field=>$code)
-		{
-			
-			$this->$field = $this->GetValue($code,$issue);
-			if(is_object($this->$field))
-			{
-				dump($this->$field);
-				dd($field." is object . Correct it ".__FILE__." line=".__LINE__);
-			}
-				
-			if($this->$field == null)
-				$this->$field = '';
-			
-			else if(strtotime($this->$field)!=false)
-			{
-				$dt = new \DateTime($this->$field);
-				$this->SetTimeZone($dt);
-				$carbon = Carbon::instance($dt);
-				$carbon->second = 0;
-				$this->$field = $carbon->getTimestamp();//$dt->format('Y-m-d H:i');
-			}
+				$this->$field = $this->GetValue($code,$issue,$field);
 		}
 	}
-	static function SetTimeZone($datetime)
-	{
-		$datetime->setTimezone(new \DateTimeZone("Asia/Karachi"));
-	}
-	
 	function DateToState($state)
 	{
 		$retval = null;
@@ -94,10 +40,63 @@ class Ticket
 	
 		
 	}
-	private function GetValue($prop,$issue,$alternative=null)
+	private function GetValue($prop,$issue,$fieldname)
 	{
 		switch($prop)
 		{
+			case 'labels':
+				if(isset($issue->fields->labels))
+				{
+					foreach($issue->fields->labels as &$label)
+						$label = strtolower($label);
+					return $issue->fields->labels;
+					
+				}
+				return [];
+			case 'key':
+				return $issue->key;
+				break;
+			case 'summary':
+				return $issue->fields->summary;
+				break;
+			case 'description':
+				if(isset($issue->fields->description))
+					return $issue->fields->description;
+				return '';
+				break;
+			case 'timeremainingestimate':
+				if(isset($issue->fields->timeoriginalestimate))
+				{
+					return $issue->fields->timeoriginalestimate->scalar;
+				}
+				return 0;
+				break;
+		
+			case'timeoriginalestimate':
+				if(isset($issue->fields->timeoriginalestimate))
+				{
+					return $issue->fields->timeoriginalestimate->scalar;
+				}
+				return 0;
+				break;
+			case 'timespent':
+				if(isset($issue->fields->timespent))
+				{
+					return $issue->fields->timespent;
+				}
+				return 0;
+			case 'updated':
+				if(isset($issue->fields->updated))
+				{
+					$updated= new Carbon($issue->fields->updated);
+					SetTimeZone($updated);
+					return $updated->getTimestamp();
+				}
+				else 
+				{
+					return '';
+				}
+				break;
 			case 'reporter':
 				$reporter = [];
 				$reporter['name'] = 'none';
@@ -126,12 +125,10 @@ class Ticket
 				{
 					foreach($issue->fields->fixVersions as $fixVersion)
 					{
-						$cstr[] = $fixVersion->name;
+						$cstr[] = strtolower($fixVersion->name);
 					}
 				}
-				if(count($cstr)==0)
-					$cstr[] = 'none';
-				//dump($cstr);
+				
 				return $cstr;
 				break;
 			case 'components':
@@ -141,28 +138,47 @@ class Ticket
 					
 					foreach($issue->fields->components as $component)
 					{
-						$cstr[] = $component->name;
+						$cstr[] = strtolower($component->name);
 					}
 				}
-				if(count($cstr)==0)
-					$cstr[] = 'none';
-				//dump($cstr);
 				return $cstr;
 				break;
 			case 'project':
-				if(isset($issue->fields->project->key))
-					return $issue->fields->project->key;
-				else 
-					return '';
+				return $issue->fields->project->key;
 				break;
 			case 'resolutiondate':
 				if(isset($issue->fields->resolutiondate))
 				{
-					return  $issue->fields->resolutiondate;
+					$resolutiondate= new Carbon($issue->fields->resolutiondate);
+					SetTimeZone($resolutiondate);
+					return $resolutiondate->getTimestamp();
 				}
 				else 
 				{
-					return -1;
+					return '';
+				}
+				break;
+			case 'subtasks':
+				$subtasks = [];
+				if(isset($issue->fields->subtasks))
+				{
+					foreach($issue->fields->subtasks as $subtask)
+					{
+						$subtasks[$subtask->key] = $subtask->key;
+					}
+				}
+				return $subtasks;
+				break;
+			case 'duedate':
+				if(isset($issue->fields->duedate))
+				{
+					$duedate= new Carbon($issue->fields->duedate);
+					SetTimeZone($duedate);
+					return $duedate->getTimestamp();
+				}
+				else 
+				{
+					return '';
 				}
 				break;
 			case 'resolution':
@@ -176,8 +192,21 @@ class Ticket
 			case 'status':
 				return  $issue->fields->status->name;
 				break;
+			case 'subtask':
+				if(!isset($issue->fields->issuetype))
+					dd("ERROR::Enable issuetype fields for subtask");
+				return  $issue->fields->issuetype->subtask;
+				break;
+			case 'issuetypecategory':
+				if(!isset($issue->fields->issuetype->name))
+					dd("ERROR::Enable issuetype fields for issuetypecategory");
+				if(function_exists('MapIssueTypeToCategory'))
+					return MapIssueTypeToCategory(strtolower($issue->fields->issuetype->name)); 
+				else
+					dd('MapIssueTypeToCategory() is not declared to handle field='.$fieldname);
+				break;
 			case 'issuetype':
-				return  $issue->fields->issuetype->name;
+				return  strtolower($issue->fields->issuetype->name);
 				break;
 			case 'statuscategory':
 				if(!isset($issue->fields->status))
@@ -189,10 +218,8 @@ class Ticket
 				else if($issue->fields->status->statuscategory->id == 4)
 					return 'INPROGRESS';
 				else
-				{
-					echo $issue->key." has unknown category";
-					exit();
-				}
+					dd($issue->key." has unknown category");
+			
 				break;
 			case 'priority':
 				if(isset($issue->fields->priority))
@@ -211,40 +238,78 @@ class Ticket
 				break;
 			case 'transitions':
 				$transitions = [];
+				if(!isset($issue->changelog->histories))
+					return $transitions;
 				foreach($issue->changelog->histories as $history)
 				{
 					foreach($history->items as $item)
 					{
 						if($item->field == "status")
 						{
-							$item->created= new \DateTime($history->created);
-							self::SetTimeZone($item->created);
-							$carbon = Carbon::instance($item->created);
-							$carbon->second = 0;
-							$transitions[] = $item;
+							$obj =  new \StdClass();
+							$created= new Carbon($history->created);
+							SetTimeZone($created);
+							$obj->date = $created->getTimestamp();
+							$obj->from = $item->fromString;
+							$obj->to = $item->toString;
+							$transitions[] = $obj;
 						}
 					}
 				}
 				return $transitions;
 				break;
+			case 'inwardIssue':
+				$issuelinks = [];
+				if(!isset($issue->fields->issuelinks))
+					return [];
 				
-			//// Custom Fields //////////////////////////////////////
-			case 'customfield_13106'://'reason_for_closure':
-				if(isset($issue->fields->customFields[$prop]))
+				foreach($issue->fields->issuelinks as $issuelink)
 				{
-					return $issue->fields->customFields[$prop]->value;
+					if(isset($issuelink->inwardIssue))
+					{
+						$issuelinks[strtolower($issuelink->type->inward)][]=$issuelink->inwardIssue->key;
+					}
 				}
-			default:
-				if(isset($issue->$prop))
-					return $issue->$prop;
-				else if(isset($issue->fields->$prop))
-					return $issue->fields->$prop;
-				else if(isset($issue->fields->customFields[$prop]))
+				return $issuelinks;
+				break;
+			case 'inwardIssue':
+				$issuelinks = [];
+				if(!isset($issue->fields->issuelinks))
+					return [];
+				
+				foreach($issue->fields->issuelinks as $issuelink)
 				{
-					return $issue->fields->customFields[$prop];
+					if(isset($issuelink->inwardIssue))
+					{
+						$issuelinks[strtolower($issuelink->type->inward)][]=$issuelink->inwardIssue->key;
+					}
+				}
+				return $issuelinks;
+				break;
+			case 'outwardIssue':
+				$issuelinks = [];
+				if(!isset($issue->fields->issuelinks))
+					return $issuelinks;
+				foreach($issue->fields->issuelinks as $issuelink)
+				{
+					if(isset($issuelink->outwardIssue))
+					{
+						$issuelinks[strtolower($issuelink->type->outward)][]=$issuelink->outwardIssue->key;
+					}
+				}
+				return $issuelinks;
+				break;
+			default:
+				if(function_exists('IssueParser'))
+				{
+					return IssueParser($prop,$issue,$fieldname); 
+					break;
 				}
 				else
-					return null;
+				{
+					dd('IssueParser() is not declared to handle field='.$fieldname);
+				}
+				break;
 		}
 	}
 }
