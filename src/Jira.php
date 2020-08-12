@@ -225,7 +225,6 @@ class Jira
 		$max = 500;
 		$start = 0;
 		
-		dump("Query for active tickets ".$jql);
 		if(isset($Jirafields->transitions))
 			$expand = ['changelog'];
 		else
