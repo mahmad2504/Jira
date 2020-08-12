@@ -65,9 +65,9 @@ class Ticket
 				return '';
 				break;
 			case 'timeremainingestimate':
-				if(isset($issue->fields->timeoriginalestimate))
+				if(isset($issue->fields->timeremainingestimate))
 				{
-					return $issue->fields->timeoriginalestimate->scalar;
+					return $issue->fields->timeremainingestimate->scalar;
 				}
 				return 0;
 				break;

@@ -168,6 +168,7 @@ class Jira
 	}
 	public static function UpdateTimeTrack($key,$timeoriginalestimate,$timeremainingestimate,$timespent)
 	{
+		dump($key." ".$timeoriginalestimate." ".$timeremainingestimate." ".$timespent);
 		try 
 		{
 			//$timeTracking->setOriginalEstimate('1w 1d 6h');
