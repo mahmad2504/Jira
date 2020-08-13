@@ -65,26 +65,16 @@ class Ticket
 				return '';
 				break;
 			case 'timeremainingestimate':
-				if(isset($issue->fields->timeremainingestimate))
-				{
-					return $issue->fields->timeremainingestimate->scalar;
-				}
-				return 0;
+				return $issue->fields->timeTracking->remainingEstimateSeconds;
 				break;
-		
 			case'timeoriginalestimate':
-				if(isset($issue->fields->timeoriginalestimate))
-				{
-					return $issue->fields->timeoriginalestimate->scalar;
-				}
-				return 0;
+				return $issue->fields->timeTracking->originalEstimateSeconds;
 				break;
+			case 'timetracking':
+				return $issue->fields->timeTracking;
 			case 'timespent':
-				if(isset($issue->fields->timespent))
-				{
-					return $issue->fields->timespent;
-				}
-				return 0;
+				return $issue->fields->timeTracking->timeSpentSeconds;
+				break;
 			case 'updated':
 				if(isset($issue->fields->updated))
 				{

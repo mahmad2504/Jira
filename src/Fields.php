@@ -9,7 +9,7 @@ use App;
 class Fields 
 {
 	private $fields = [];
-	private $default = ['key','status','issuelinks'];
+	private $default = ['key','status','issuelinks','timetracking'];
 	private $native = [];
 	private $custom = ['story_points'=>'Story Points','sprint'=>'Sprint'];
 	private $conf_filename = null;
