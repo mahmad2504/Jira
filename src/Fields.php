@@ -15,10 +15,20 @@ class Fields
 	private $conf_filename = null;
 	public function __construct($tag)
     {
+		$tags = explode("/",$tag);
+		
+
 		if (App::runningInConsole())
-			$this->conf_filename = "data/".$tag.".json";
+		{
+			$directoryName =  "data/".$tags[0];
+		}
 		else
-			$this->conf_filename = "../data/".$tag.".json";
+		{
+			$directoryName =  "../data/".$tags[0];
+		}
+		$this->conf_filename = $directoryName."/".$tags[1].".json";
+		if(!is_dir($directoryName))
+			mkdir($directoryName, 0755, true);
 		
 		if(file_exists($this->conf_filename))
 			$this->fields = json_decode(file_get_contents($this->conf_filename));

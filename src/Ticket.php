@@ -136,6 +136,19 @@ class Ticket
 			case 'project':
 				return $issue->fields->project->key;
 				break;
+			case 'created':
+				if(isset($issue->fields->created))
+				{
+					$created= new Carbon($issue->fields->created);
+					SetTimeZone($created);
+					return $created->getTimestamp();
+				}
+				else 
+				{
+					return '';
+				}
+				break;
+			break;
 			case 'resolutiondate':
 				if(isset($issue->fields->resolutiondate))
 				{
@@ -180,7 +193,7 @@ class Ticket
 					return '';
 				break;
 			case 'status':
-				return  $issue->fields->status->name;
+				return  strtoupper($issue->fields->status->name);
 				break;
 			case 'subtask':
 				if(!isset($issue->fields->issuetype))
