@@ -12,6 +12,8 @@ use JiraRestApi\Configuration\ArrayConfiguration;
 use JiraRestApi\Issue\TimeTracking;
 use mahmad\Jira\Fields;
 use mahmad\JiraTicket;
+use JiraRestApi\Field\Field;
+use JiraRestApi\Field\FieldService;
 use Carbon\Carbon;
 class Jira
 {
@@ -29,6 +31,15 @@ class Jira
               'jiraUser' => env('JIRA_'.$server.'_USERNAME'),
              'jiraPassword' => env('JIRA_'.$server.'_PASSWORD'),
 		]));
+	}
+	public static function GetFieldService()
+	{
+		$fieldService = new FieldService(new ArrayConfiguration([
+			 'jiraHost' => env('JIRA_'.self::$server.'_URL'),
+              'jiraUser' => env('JIRA_'.self::$server.'_USERNAME'),
+             'jiraPassword' => env('JIRA_'.self::$server.'_PASSWORD'),
+		]));
+		return $fieldService;
 	}
 	public static function WorkLogs($issueKey)
 	{

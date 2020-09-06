@@ -134,7 +134,7 @@ class Ticket
 				return $cstr;
 				break;
 			case 'project':
-				return $issue->fields->project->key;
+				return strtolower($issue->fields->project->key);
 				break;
 			case 'created':
 				if(isset($issue->fields->created))
@@ -143,11 +143,6 @@ class Ticket
 					SetTimeZone($created);
 					return $created->getTimestamp();
 				}
-				else 
-				{
-					return '';
-				}
-				break;
 			break;
 			case 'resolutiondate':
 				if(isset($issue->fields->resolutiondate))
@@ -155,10 +150,6 @@ class Ticket
 					$resolutiondate= new Carbon($issue->fields->resolutiondate);
 					SetTimeZone($resolutiondate);
 					return $resolutiondate->getTimestamp();
-				}
-				else 
-				{
-					return '';
 				}
 				break;
 			case 'subtasks':
@@ -187,13 +178,13 @@ class Ticket
 			case 'resolution':
 			    if(isset($issue->fields->resolution->name))
 				{
-					return  $issue->fields->resolution->name;
+					return  strtolower($issue->fields->resolution->name);
 				}
 				else 
 					return '';
 				break;
 			case 'status':
-				return  strtoupper($issue->fields->status->name);
+				return  strtolower($issue->fields->status->name);
 				break;
 			case 'subtask':
 				if(!isset($issue->fields->issuetype))
@@ -215,11 +206,11 @@ class Ticket
 				if(!isset($issue->fields->status))
 					dd("ERROR::Enable status fields for statuscategory");
 				if($issue->fields->status->statuscategory->id == 2)
-					return 'OPEN';
+					return 'open';
 				else if($issue->fields->status->statuscategory->id == 3)
-					return 'RESOLVED';
+					return 'resolved';
 				else if($issue->fields->status->statuscategory->id == 4)
-					return 'INPROGRESS';
+					return 'inprogress';
 				else
 					dd($issue->key." has unknown category");
 			
@@ -238,6 +229,7 @@ class Ticket
 					else
 						return 5;
 				}
+				
 				break;
 			case 'transitions':
 				$transitions = [];

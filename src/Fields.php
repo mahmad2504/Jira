@@ -16,8 +16,6 @@ class Fields
 	public function __construct($tag)
     {
 		$tags = explode("/",$tag);
-		
-
 		if (App::runningInConsole())
 		{
 			$directoryName =  "data/".$tags[0];
@@ -77,7 +75,8 @@ class Fields
 		$this->fields = [];
 		try 
 		{
-			$fieldService = new FieldService();
+			$fieldService = Jira::GetFieldService();
+			
 			// return custom field only. 
 			$ret = $fieldService->getAllFields(Field::CUSTOM);
 			foreach($ret as $field)
