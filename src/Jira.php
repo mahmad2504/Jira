@@ -41,6 +41,124 @@ class Jira
 		]));
 		return $fieldService;
 	}
+	public static function ValidateQuery($query)
+	{
+		$data = null;
+		$query = str_replace(" ","%20",$query);
+		$resource=env('JIRA_'.self::$server.'_URL').'/rest/api/latest/search?jql='.$query.'&maxResults=0';
+		
+		$curl = curl_init();
+		curl_setopt_array($curl, array(
+		CURLOPT_USERPWD => env('JIRA_'.self::$server.'_USERNAME').':'.env('JIRA_'.self::$server.'_PASSWORD'),
+		CURLOPT_URL =>$resource,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => array('Content-type: application/json')));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		if($data != null)
+		{
+			curl_setopt_array($curl, array(
+				CURLOPT_POST => 1,
+				CURLOPT_POSTFIELDS => $data
+				));
+		}
+		$result = curl_exec($curl);
+		$code = curl_getinfo ($curl, CURLINFO_HTTP_CODE);
+		if($code == 200)
+			return 1;
+		return 0;
+	}
+	public static function GetStructureObjects($structid)
+	{
+		$data = '{"forests":[{"spec":{"type":"clipboard"},"version":{"signature":898732744,"version":0}},{"spec":{"structureId":'.$structid.',"title":true},"version":{"signature":0,"version":0}}],"items":{"version":{"signature":-157412296,"version":43401}}}';
+		$resource=env('JIRA_'.self::$server.'_URL').'/rest/structure/2.0/poll';
+		$curl = curl_init();
+		curl_setopt_array($curl, array(
+		CURLOPT_USERPWD => env('JIRA_'.self::$server.'_USERNAME').':'.env('JIRA_'.self::$server.'_PASSWORD'),
+		CURLOPT_URL =>$resource,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => array('Content-type: application/json')));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		if($data != null)
+		{
+			curl_setopt_array($curl, array(
+				CURLOPT_POST => 1,
+				CURLOPT_POSTFIELDS => $data
+				));
+		}
+		$result = curl_exec($curl);
+		
+		$ch_error = curl_error($curl);
+		$code = curl_getinfo ($curl, CURLINFO_HTTP_CODE);
+		$objects = array();
+		if($code == 200)
+		{
+			$data = json_decode($result,true);
+			if(isset($data['forestUpdates']))
+			{
+				if(isset($data['forestUpdates'][1]['formula']))
+				{
+					$formula = $data['forestUpdates'][1]['formula'];
+					$formula_array = explode(",",$formula);
+					
+					foreach($formula_array as $formula)
+					{
+						$detail = explode(":",$formula);
+						$obj = new \StdClass();
+						$obj->rwoid = $detail[0];
+						$obj->level = $detail[1];
+						$obj->taskid = $detail[2];
+						if(strpos($detail[2], "/")>0)
+						{}
+						else
+						{
+							$objects[$obj->taskid] = $obj;
+						}
+					}
+				}
+			}
+		}
+		if(count($objects)==0)
+			return null;
+		return $objects;
+	}
+	public static function GetStructureQuery($objects)
+	{
+		$query = 'id in (' ;
+		$del = "";
+		foreach($objects as $object)
+		{
+			$query = $query.$del.$object->taskid;
+			$del = ",";
+		}
+		$query = $query.")";
+		return $query;
+	}
+	public static function StructureTree($objects,$tickets)
+	{
+		$output = [];
+		$taskatlevel[0] = new \StdClass();
+		//this->extid = $this->pextid.".".$this->pos;
+		
+		foreach($tickets as $key=>$ticket)
+		{
+			$objects[$ticket->id]->ticket=$ticket;
+			$ticket->children = [];
+		}
+		foreach($objects as $object)
+		{
+			$level = $object->level;
+			$parent = $taskatlevel[$level-1];
+		
+			//$object->ticket->extid = $parent.".".count($taskatlevel[$level]);
+			$parent->children[] = $object->ticket;
+			$taskatlevel[$level] = $object->ticket;
+			if($level == 1)
+				$output[] = $object->ticket;
+		}
+		return $output;
+		//return $taskatlevel[0];
+	}
+	
 	public static function WorkLogs($issueKey)
 	{
 		$worklogs = self::$issueService->getWorklog($issueKey)->getWorklogs();
@@ -53,10 +171,9 @@ class Jira
 			$obj->id = $worklog->id;
 			$obj->started = $started->getTimeStamp();
 			$obj->seconds = $worklog->timeSpentSeconds;
-			$obj->issueId = $worklog->issueId;
-			$obj->author = $worklog->author;
-			$obj->comment = $worklog->comment;
-			unset($obj->author['avatarUrls']);
+			//$obj->issueId = $worklog->issueId;
+			$obj->author = $worklog->author['displayName'];
+			//unset($obj->author['avatarUrls']);
 			$wlgs[] = $obj;
 		}
 		return $wlgs;

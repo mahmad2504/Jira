@@ -44,6 +44,9 @@ class Ticket
 	{
 		switch($prop)
 		{
+			case 'id':
+				return $issue->id;
+				break;
 			case 'labels':
 				if(isset($issue->fields->labels))
 				{
@@ -100,7 +103,9 @@ class Ticket
 				break;
 			case 'assignee':
 				$assignee = [];
-				$assignee['name'] = 'none';
+				$assignee['name'] = 'unassigned';
+				$assignee['displayName'] = 'unassigned';
+				$assignee['emailAddress'] = 'unassigned';
 				if(isset($issue->fields->assignee))
 				{
 					$assignee['name'] = $issue->fields->assignee->name;
@@ -151,6 +156,8 @@ class Ticket
 					SetTimeZone($resolutiondate);
 					return $resolutiondate->getTimestamp();
 				}
+				else 
+					return '';
 				break;
 			case 'subtasks':
 				$subtasks = [];
